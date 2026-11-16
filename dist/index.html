@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>河牌 · 德州扑克</title>
+<meta name="description" content="浏览器里的单机德州扑克练习桌">
+<link rel="stylesheet" href="style.css">
+<script src="poker.js" defer></script>
+<script src="rooms.js" defer></script>
+</head>
+<body>
+<header class="top"><div class="brand"><span class="brand-icon">♠</span><div><strong>河牌</strong><small>RIVER POKER</small></div></div><button class="outline" id="rules">玩法说明</button></header>
+<main>
+<section class="intro"><div><h1>德州扑克</h1><p id="mode">单挑练习桌 · 无限注</p></div><div class="table-tools"><button class="outline" id="multiplayer">多人房间</button> <button class="outline" id="reset">重新开桌</button></div></section>
+<div class="layout">
+<section class="game" aria-label="牌桌">
+<div class="arena">
+<div class="felt"></div>
+<div class="seat opponent"><div class="player"><span class="avatar">♞</span><div><strong><span id="opponent-name">电脑对手</span> <span id="cpu-dealer"></span></strong><small id="cpu-stack"></small></div></div><div id="cpu-cards" class="cards"></div></div>
+<div class="center"><div class="pot"><span id="stage"></span><strong id="pot"></strong></div><div id="board" class="cards"></div></div>
+<div class="seat hero"><div id="hero-cards" class="cards"></div><div class="player"><span class="avatar you">♠</span><div><strong>你 <span id="hero-dealer"></span></strong><small id="hero-stack"></small></div></div></div>
+</div>
+<div class="controls"><div id="status" role="status"></div><div id="actions"></div></div>
+</section>
+<aside><div class="side-head"><h2>本桌记录</h2><span id="hand-number"></span></div><div class="blind"><span>小盲 / 大盲</span><strong>10 / 20</strong></div><ol id="history"></ol><div class="virtual">虚拟筹码</div></aside>
+</div>
+<section id="room-area" hidden>
+<div class="layout room-layout">
+<section class="game" aria-label="多人牌桌">
+<div class="room-bar"><div><strong id="room-caption"></strong><div class="code-line">房间码 <code id="room-code-display"></code> <button class="outline" id="copy-room">复制</button></div></div><button class="outline" id="leave-room">返回单机</button></div>
+<div class="room-felt"><strong id="room-pot"></strong><div id="room-board"></div></div>
+<div class="controls"><div id="room-status" role="status"></div><div id="room-actions"></div></div>
+<div id="room-seats" aria-label="玩家座位"></div>
+</section>
+<aside><div class="side-head"><h2>本桌记录</h2></div><div class="blind"><span>小盲 / 大盲</span><strong>10 / 20</strong></div><ol id="room-history"></ol><div class="virtual">虚拟筹码</div></aside>
+</div>
+</section>
+</main>
+<dialog id="help"><form method="dialog"><button class="outline close" aria-label="关闭">×</button></form><h2>玩法说明</h2><p>每位玩家各拿两张底牌。翻牌、转牌、河牌合计发出五张公共牌，摊牌时从七张牌中选最强的五张。其余玩家全部弃牌时，你直接赢得底池。</p><p>没有待跟注金额时可以过牌。有待跟注金额时可以跟注、加注或弃牌。下注上限按双方有效筹码计算。</p><p>牌型由强到弱：同花顺（含皇家同花顺）、四条、葫芦、同花、顺子、三条、两对、一对、高牌。</p><p>双方各从 1,000 虚拟筹码开始，庄家轮换。任一方筹码归零后可重新开桌。</p></dialog>
+<dialog id="rooms"><form method="dialog"><button class="outline close" aria-label="关闭">×</button></form><h2>多人房间</h2><p>支持 2–16 人。把游戏地址和房间码发给朋友。</p><label class="room-field">昵称 <input id="room-name" maxlength="16" autocomplete="off" placeholder="可留空"></label><button class="outline" id="create-room">创建房间</button><form id="join-room"><label class="room-field">房间码 <input id="room-code" required maxlength="8" autocomplete="off" autocapitalize="characters"></label><button class="outline">加入房间</button></form><p id="room-message" role="status"></p></dialog>
+</body>
+</html>
+
