@@ -9,6 +9,7 @@ const { MultiplayerTable } = require("./multiplayer.js");
 
 const rooms = new Map();
 const capacity = 16;
+const turnDuration = 45_000;
 const port = Number(process.env.POKER_PORT || process.env.PORT || 8766);
 const assets = new Map([
   ["/", ["index.html", "text/html"]],
@@ -22,15 +23,29 @@ function reply(res, status, data) {
   res.end(JSON.stringify(data));
 }
 
+function advanceRoom(room, now = Date.now()) {
+  room.revision++;
+  room.deadline = room.game.done ? null : now + turnDuration;
+}
+
+function expireTurn(room, now) {
+  if (!room.deadline || now < room.deadline) return;
+  const game = room.game;
+  const seat = game.turn;
+  const action = game.options(seat).call ? "fold" : "pass";
+  game.act(seat, action, undefined, true);
+  advanceRoom(room, now);
+}
+
 function roomState(room, seat) {
   const game = room.game;
   return {
-    code: room.code, seat, revision: room.revision,
+    code: room.code, seat, revision: room.revision, serverTime: Date.now(),
     names: room.players.map(player => player.name),
     game: game && {
       number: game.number, dealer: game.dealer, stacks: game.stacks, board: game.board,
       street: game.street, pot: game.pot, turn: game.turn, done: game.done, result: game.result,
-      history: game.history,
+      history: game.history, deadline: room.deadline,
       cards: game.hole.map((cards, index) => (
         index === seat || (game.reveal && !game.folded.has(index)) ? cards : cards.map(() => null)
       )),
@@ -91,6 +106,7 @@ const server = http.createServer(async (req, res) => {
     const seat = room.players.findIndex(player => player.token === token);
     if (seat < 0) return reply(res, 401, { error: "座位验证失败。" });
     room.touched = Date.now();
+    expireTurn(room, room.touched);
     if (req.method === "GET" && url.pathname === "/api/state") return reply(res, 200, roomState(room, seat));
     if (req.method !== "POST" || url.pathname !== "/api/action") return reply(res, 404, { error: "入口不存在。" });
     if (data.revision !== room.revision) return reply(res, 409, { error: "牌桌已更新，请重试。" });
@@ -102,12 +118,17 @@ const server = http.createServer(async (req, res) => {
     } else if (!room.game?.act(seat, data.action, data.target)) {
       return reply(res, 409, { error: "当前无法执行该操作，请检查轮次和金额。" });
     }
-    room.revision++;
+    advanceRoom(room);
     return reply(res, 200, roomState(room, seat));
   } catch {
     return reply(res, 400, { error: "请求格式有误。" });
   }
 });
+
+setInterval(() => {
+  const now = Date.now();
+  for (const room of rooms.values()) expireTurn(room, now);
+}, 250).unref();
 
 setInterval(() => {
   const cutoff = Date.now() - 12 * 60 * 60 * 1000;

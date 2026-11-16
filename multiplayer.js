@@ -94,10 +94,10 @@ class MultiplayerTable {
     };
   }
 
-  act(seat, action, target) {
+  act(seat, action, target, timedOut = false) {
     if (this.done || this.turn !== seat) return false;
     const { call, high, min, max } = this.options(seat);
-    const name = this.names[seat];
+    const name = this.names[seat] + (timedOut ? "超时，自动" : "");
     switch (action) {
       case "fold":
         this.folded.add(seat);

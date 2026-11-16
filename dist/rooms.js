@@ -5,6 +5,7 @@
   const roomDialog = byId("rooms");
   const roomArea = byId("room-area");
   const stateLabel = byId("room-status");
+  const countdown = byId("room-countdown");
   const actions = byId("room-actions");
   const seats = byId("room-seats");
   const suits = ["", "", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
@@ -12,6 +13,16 @@
   let state;
   let busy = false;
   let polling = false;
+  let turnEndsAt = 0;
+
+  function updateCountdown() {
+    countdown.hidden = !state?.game?.deadline;
+    if (countdown.hidden) return;
+    const seconds = Math.max(0, Math.ceil((turnEndsAt - performance.now()) / 1000));
+    countdown.textContent = seconds + " 秒";
+    countdown.classList.toggle("urgent", seconds <= 10);
+    for (const button of actions.querySelectorAll("button")) button.disabled = seconds === 0;
+  }
 
   function make(tag, className, label) {
     const node = document.createElement(tag);
@@ -48,6 +59,7 @@
   function show(value) {
     state = value;
     const { game, names, code, seat } = state;
+    turnEndsAt = performance.now() + (game?.deadline ? game.deadline - state.serverTime : 0);
     byId("room-caption").textContent = "房间 " + code + " · " + names.length + " / 16 人";
     byId("room-code-display").textContent = code;
     byId("room-board").replaceChildren(cards(game?.board || [], 5 - (game?.board.length || 0)));
@@ -62,6 +74,7 @@
     }));
     byId("room-history").replaceChildren(...(game?.history || []).map(line => make("li", "", line)));
     actions.replaceChildren();
+    updateCountdown();
 
     function button(label, act, primary = false) {
       const element = make("button", primary ? "primary" : "", label);
@@ -194,6 +207,7 @@
   }
 
   setInterval(refresh, 750);
+  setInterval(updateCountdown, 200);
   try {
     const saved = JSON.parse(sessionStorage.getItem("river-room"));
     if (saved?.code && saved?.token) {
